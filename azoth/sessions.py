@@ -9,7 +9,7 @@ from .interfaces import (
     ISessionPool,
     )
 from .decorators import singleton
-from .config  import AzothConfigParser
+from .config  import config2dict
 
 DEFAULT_TARGET = 'master'
 
@@ -45,11 +45,11 @@ class SessionPool(object):
         self.can_use_name(dst)
         self._aliases[dst] = src
 
-    def install(self, name, config, prefix='sqlalchemy.'):
+    def install(self, name, conf, prefix='sqlalchemy.'):
         self.can_use_name(name)
-        options = AzothConfigParser.get_section_dict(config, name)
-        engine = sa.engine_from_config(options, prefix)
+        options = config2dict(conf, name)
 
+        engine = sa.engine_from_config(options, prefix)
         extension = ZopeTransactionExtension()
         session = sa_orm.sessionmaker(extension=extension)
         DBSession = sa_orm.scoped_session(session)
