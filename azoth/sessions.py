@@ -13,7 +13,6 @@ from .config  import config2dict
 
 DEFAULT_TARGET = 'master'
 
-
 class SessionSetup(object):
     @classmethod
     def setup_from_file(cls, path, *args, **kwds):
