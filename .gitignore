@@ -44,3 +44,9 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# tox
+.tox
+
+# wget-log
+wget-log*
