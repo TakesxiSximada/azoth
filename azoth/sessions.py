@@ -1,4 +1,6 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+import random
+import functools
 import sqlalchemy as sa
 import sqlalchemy.orm as sa_orm
 import transaction
@@ -8,10 +10,13 @@ from .interfaces import (
     ISessionManager,
     ISessionPool,
     )
-from .decorators import singleton
-from .config  import config2dict
+from .config import (
+    config2dict,
+    AzothConfigParser,
+    )
 
 DEFAULT_TARGET = 'master'
+
 
 class SessionSetup(object):
     @classmethod
@@ -27,6 +32,7 @@ class SessionSetup(object):
         if alias:
             manager.alias(name, alias)
 
+
 @implementer(ISessionPool)
 class SessionPool(object):
     def __init__(self):
@@ -39,7 +45,7 @@ class SessionPool(object):
         self._aliases = {}
 
     def alias(self, src, dst):
-        if not src in self.keys():
+        if src not in self.keys():
             raise ValueError('Session not found: {}'.format(src))
         self.can_use_name(dst)
         self._aliases[dst] = src
@@ -56,9 +62,11 @@ class SessionPool(object):
         self._sessions[name] = DBSession
 
     def keys(self):
-        return list(self._sessions.keys()) + \
-          list(self._sessiongroups.keys()) + \
-          list(self._aliases.keys())
+        return functools.reduce(lambda x, y: list(x) + list(y), [
+            self._sessions.keys(),
+            self._sessiongroups.keys(),
+            self._aliases.keys(),
+            ])
 
     def can_use_name(self, name):
         if name in self.keys():
@@ -66,13 +74,15 @@ class SessionPool(object):
 
     def group(self, name, session_names):
         self.can_use_name(name)
-        sessions = [self._sessions[name] for name in session_names]
+        sessions = [self._sessions[_name] for _name in session_names]
         self._sessiongroups[name] = sessions
 
-    def get(self, name, choice=None):
+    def get(self, name=None, choice=None):
         return self.select(name, choice)
 
-    def select(self, name, choice=None):
+    def select(self, name=None, choice=None):
+        if name is None:
+            name = DEFAULT_TARGET
         if choice is None:
             choice = random.choice
 
@@ -86,9 +96,9 @@ class SessionPool(object):
         else:
             raise ValueError('Session not found: {}'.format(name))
 
-#@singleton
+
 @implementer(ISessionManager)
-class SessionManager(object):
+class SessionManager(object):  # singleton
     def __new__(cls, *args, **kwds):
         if not hasattr(cls, '_instance'):
             self = object.__new__(cls)
@@ -96,8 +106,11 @@ class SessionManager(object):
             setattr(cls, '_instance', self)
         return getattr(cls, '_instance')
 
+    pool = None
+
     def __init__(self, pool_class=SessionPool, *args, **kwds):
-        self.pool = pool_class()
+        if not self.pool:
+            self.pool = pool_class()
 
     def reset(self):
         return self.pool.reset()

@@ -1,8 +1,9 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 try:
     import configparser
 except ImportError:
     import ConfigParser as configparser
+
 
 def config2dict(conf_or_dict, name=None):
     if isinstance(conf_or_dict, configparser.ConfigParser):
@@ -11,6 +12,7 @@ def config2dict(conf_or_dict, name=None):
         return conf_or_dict
     else:
         raise TypeError('Illegal type')
+
 
 class AzothConfigParser(configparser.SafeConfigParser):
     def get_section_dict(self, section_name):

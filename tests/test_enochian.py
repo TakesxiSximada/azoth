@@ -1,54 +1,54 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import unittest
 from unittest import TestCase
 
+from azoth.testutils import (
+    create_db,
+    destroy_db,
+    )
 
-class UsecaseTest(TestCase):
-    def test_session(self):
-        try:
-            import configparser
-        except ImportError:
-            import ConfigParser as configparser
-        from azoth.sessions import (
-            SessionManager,
-            SessionPool,
-            DEFAULT_TARGET,
-            )
 
-        conf = configparser.SafeConfigParser()
-        conf.add_section(DEFAULT_TARGET)
-        conf.set(DEFAULT_TARGET, 'sqlalchemy.url', 'sqlite:///test.sqlite3')
+class OneTest(TestCase):
+    @create_db
+    def setUp(self):
+        pass
 
-        manager = SessionManager(SessionPool)
-        manager.install('master', conf)
-        manager.group('slave', ['master'])
+    @destroy_db
+    def tearDown(self):
+        pass
 
-        session = manager.get('master')
-        master_session = manager.get('master')
-        self.assertEqual(session, master_session)
-
-    def test_declarative_model(self):
+    def test_it(self):
         import sqlalchemy as sa
-        import sqlalchemy.orm as sa_orm
+        import transaction
         from azoth.models import (
             Base,
-            IndexBase,
-            ActionBase,
-            CopyBase,
-            TimestampBase,
-            LogicalDeleteBase,
             PowerBase,
+            create_all,
             )
 
-        class TestTable(Base, ActionBase, IndexBase, CopyBase, TimestampBase, LogicalDeleteBase):
-            __tablename__ = 'TestTable'
-            name = sa.Column(sa.Unicode, primary_key=True)
-            description = sa.Column(sa.Unicode)
+        class User(Base, PowerBase):
+            __tablename__ = 'User'
+            __table_args__ = (
+                {'sqlite_autoincrement': True},
+                )
 
-        class TestRelTable(Base, PowerBase):
-            __tablename__ = 'TestRelTable'
-            test_table_id = sa.Column(sa.Integer)
-            test_table = sa_orm.relationship('TestTable.id')
+            id = sa.Column(sa.Integer, primary_key=True)
+            name = sa.Column(sa.Unicode, nullable=False, default=u'')
+        create_all()
+
+        for ii in range(10):
+            user = User()
+            user.save()
+        transaction.commit()
+
+        for user in User.query().all():
+            user.name = 'user-{}'.format(user.id)
+            user.save()
+        transaction.commit()
+
+        for user in User.query().all():
+            user_id = int(user.name.strip('user-'))
+            self.assertEqual(user.id, user_id)
 
 if __name__ == '__main__':
     unittest.main()

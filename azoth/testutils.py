@@ -1,11 +1,10 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import functools
-import configparser
-import transaction
 from .sessions import (
     SessionSetup,
     SessionManager,
     )
+
 
 def create_db(func):
     @functools.wraps(func)
@@ -15,6 +14,7 @@ def create_db(func):
         return func(self, *args, **kwds)
     return _wrap
 
+
 def destroy_db(func):
     @functools.wraps(func)
     def _wrap(self, *args, **kwds):
@@ -22,6 +22,7 @@ def destroy_db(func):
         db_fixture.destroy_db()
         return func(self, *args, **kwds)
     return _wrap
+
 
 class DBFixture(object):
     def create_db(self):

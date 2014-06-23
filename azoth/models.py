@@ -1,4 +1,7 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+"""azoth.models
+"""
+
 import datetime
 import sqlalchemy as sa
 from sqlalchemy.sql import functions as sqlafunc
@@ -19,6 +22,13 @@ from .sessions import (
     SessionManager,
     )
 Base = declarative_base()
+
+
+def create_all(*args, **kwds):
+    manager = SessionManager()
+    session = manager.get()
+    engine = session.get_bind()
+    Base.metadata.create_all(engine)
 
 
 class ActionBase(object):
@@ -46,8 +56,9 @@ class ActionBase(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if not exc_type: # no error
+        if not exc_type:  # no error
             self.save()
+
 
 class CopyBase(object):
     __copy_ignores__ = [
@@ -55,6 +66,7 @@ class CopyBase(object):
         ]
 
     def copy(self, deep=False, ignores=set(), *args,  **kwds):
+        cls = type(self)
         manager = manager_of_class(cls)
         if not manager:
             raise TypeError('No mapper: {}'.format(cls))
@@ -62,7 +74,7 @@ class CopyBase(object):
         def _get_ignore_attributes():
             for super_cls in cls.__mro__:
                 yield getattr(super_cls, '__copy_ignores__', [])
-            yield ignores # argument
+            yield ignores  # argument
 
         # select ignore properties
         ignore_attributes = set()
@@ -73,16 +85,16 @@ class CopyBase(object):
         columns = {}
         relationships = {}
         for attr in manager.mapper.iterate_properties:
-            if not attr.key in __copy_ignores__:
+            if attr.key not in ignore_attributes:
                 if isinstance(attr, ColumnProperty):
                     columns[attr.key] = attr
                 elif isinstance(attr, RelationshipProperty):
                     relationships[attr.key] = attr
                 else:
-                    pass # ignore
+                    pass  # ignore
 
         # copy
-        new_obj = cls()
+        new_obj = type(self)()
         for key in attr in columns.items():
             value = getattr(self, key)
             setattr(new_obj, key, value)
@@ -101,6 +113,7 @@ class CopyBase(object):
                     obj = getattr(self, 'key')
                     setattr(self, key, obj)
         return new_obj
+
 
 class IndexBase(object):
     __copy_ignores__ = [
@@ -139,6 +152,7 @@ class TimestampBase(object):
                 server_onupdate=sqlafunc.current_timestamp(),
                 ))
 
+
 class LogicalDeleteBase(object):
     __copy_ignores__ = [
         'deleted_at',
@@ -150,6 +164,7 @@ class LogicalDeleteBase(object):
             sa.Column(
                 sa.TIMESTAMP, nullable=True, index=True,
             ))
+
 
 class PowerBase(
         ActionBase,

@@ -3,6 +3,8 @@
 import os
 import sys
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 README_PATH = os.path.join(ROOT, 'README')
@@ -26,11 +28,9 @@ test_require = [
     ]
 
 
-from setuptools.command.test import test as TestCommand
-import sys
-
 class Tox(TestCommand):
     user_options = [('tox-args=', 'a', "Arguments to pass to tox")]
+
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.tox_args = None
@@ -41,11 +41,14 @@ class Tox(TestCommand):
         self.test_suite = True
 
     def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
+        # import here, cause outside the eggs aren't loaded
         import tox
         import shlex
         errno = tox.cmdline(args=shlex.split(self.tox_args))
         sys.exit(errno)
+
+DESCRIPTION = 'Sqlalchemy utilities'
+
 
 setup(
     name='azoth',
@@ -55,7 +58,7 @@ setup(
     license='BSD',
     author='TakesxiSximada',
     author_email='takesxi.sximada@gmail.com',
-    description='The Python Web Auto Drive framework using selenium.webdriver.',
+    description=DESCRIPTION,
     long_description=long_desc,
     zip_safe=False,
     classifiers=[
@@ -82,5 +85,5 @@ setup(
     install_requires=install_requires,
     test_require=test_require,
     packages=find_packages(),
-    cmdclass = {'test': Tox},
+    cmdclass={'test': Tox},
     )

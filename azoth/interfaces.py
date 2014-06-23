@@ -1,9 +1,10 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from zope.interface import (
     Interface,
     Attribute,
     )
+
 
 class ISessionPool(Interface):
     alias = Attribute('')
@@ -14,6 +15,7 @@ class ISessionPool(Interface):
     group = Attribute('')
     get = Attribute('')
     select = Attribute('')
+
 
 class ISessionManager(Interface):
     alias = Attribute('')
