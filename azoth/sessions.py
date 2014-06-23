@@ -14,6 +14,7 @@ from .config import (
     config2dict,
     AzothConfigParser,
     )
+from .decorators import singleton
 
 DEFAULT_TARGET = 'master'
 
@@ -97,8 +98,9 @@ class SessionPool(object):
             raise ValueError('Session not found: {}'.format(name))
 
 
+@singleton
 @implementer(ISessionManager)
-class SessionManager(object):  # singleton
+class SessionManager(object):
     def __new__(cls, *args, **kwds):
         if not hasattr(cls, '_instance'):
             self = object.__new__(cls)

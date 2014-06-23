@@ -2,11 +2,13 @@
 
 
 def singleton(cls):
-    _instance = None
+    """The singleton decorato.r
+    """
+    _instances = {}
 
-    def _wrap(self, *args, **kwds):
-        nonlocal _instance
-        if not _instance:
-            _instance = cls(self, *args, **kwds)
-        return _instance
+    def _wrap(*args, **kwds):
+        nonlocal _instances
+        if cls not in _instances:
+            _instances[cls] = cls(*args, **kwds)
+        return _instances[cls]
     return _wrap

@@ -24,6 +24,8 @@ install_requires = [
 
 test_require = [
     'tox',
+    'nose',
+    'coverage',
     'testfixtures',
     ]
 
