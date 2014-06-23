@@ -2,6 +2,7 @@
 import unittest
 from unittest import TestCase
 
+
 class UsecaseTest(TestCase):
     def test_session(self):
         try:
@@ -31,7 +32,7 @@ class UsecaseTest(TestCase):
         import sqlalchemy.orm as sa_orm
         from azoth.models import (
             Base,
-            IDBase,
+            IndexBase,
             ActionBase,
             CopyBase,
             TimestampBase,
@@ -39,7 +40,7 @@ class UsecaseTest(TestCase):
             PowerBase,
             )
 
-        class TestTable(Base, ActionBase, IDBase, CopyBase, TimestampBase, LogicalDeleteBase):
+        class TestTable(Base, ActionBase, IndexBase, CopyBase, TimestampBase, LogicalDeleteBase):
             __tablename__ = 'TestTable'
             name = sa.Column(sa.Unicode, primary_key=True)
             description = sa.Column(sa.Unicode)

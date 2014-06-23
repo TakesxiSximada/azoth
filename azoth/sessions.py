@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 import sqlalchemy as sa
 import sqlalchemy.orm as sa_orm
+import transaction
 from zope.interface import implementer
 from zope.sqlalchemy import ZopeTransactionExtension
 from .interfaces import (
@@ -21,18 +22,22 @@ class SessionSetup(object):
         cls.setup(conf, *args, **kwds)
 
     @classmethod
-    def setup(cls, conf, name, alias=None, *args, **kwds):
+    def setup(cls, conf, name=DEFAULT_TARGET, alias=None, *args, **kwds):
         manager = SessionManager(*args, **kwds)
         manager.install(name, conf)
         if alias:
             manager.alias(name, alias)
 
-
 @implementer(ISessionPool)
 class SessionPool(object):
-    _sessions = {}
-    _sessiongroups = {}
-    _aliases = {}
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        transaction.abort()
+        self._sessions = {}
+        self._sessiongroups = {}
+        self._aliases = {}
 
     def alias(self, src, dst):
         if not src in self.keys():
@@ -56,7 +61,6 @@ class SessionPool(object):
           list(self._sessiongroups.keys()) + \
           list(self._aliases.keys())
 
-
     def can_use_name(self, name):
         if name in self.keys():
             raise ValueError('already used: {}'.format(name))
@@ -66,20 +70,22 @@ class SessionPool(object):
         sessions = [self._sessions[name] for name in session_names]
         self._sessiongroups[name] = sessions
 
-    def get(self, name):
-        return self.select(name)
+    def get(self, name, choice=None):
+        return self.select(name, choice)
 
-    def select(self, name):
+    def select(self, name, choice=None):
+        if choice is None:
+            choice = random.choice
+
         if name in self._aliases:
             name = self._aliases[name]
 
         if name in self._sessions:
             return self._sessions[name]
         elif name in self._sessiongroups:
-            return random.choice(self._sessiongroups[name])
+            return choice(self._sessiongroups[name])
         else:
             raise ValueError('Session not found: {}'.format(name))
-
 
 #@singleton
 @implementer(ISessionManager)
@@ -93,6 +99,9 @@ class SessionManager(object):
 
     def __init__(self, pool_class=SessionPool, *args, **kwds):
         self.pool = pool_class()
+
+    def reset(self):
+        return self.pool.reset()
 
     def alias(self, *args, **kwds):
         return self.pool.alias(*args, **kwds)

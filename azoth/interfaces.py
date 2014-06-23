@@ -7,6 +7,7 @@ from zope.interface import (
 
 class ISessionPool(Interface):
     alias = Attribute('')
+    reset = Attribute('')
     install = Attribute('')
     keys = Attribute('')
     can_use_name = Attribute('')
@@ -16,6 +17,7 @@ class ISessionPool(Interface):
 
 class ISessionManager(Interface):
     alias = Attribute('')
+    reset = Attribute('')
     install = Attribute('')
     group = Attribute('')
     get = Attribute('')
