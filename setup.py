@@ -16,6 +16,7 @@ except:
     long_desc = ''
 
 install_requires = [
+    'six',
     'transaction',
     'sqlalchemy',
     'zope.interface',
@@ -25,9 +26,10 @@ install_requires = [
 test_require = [
     'tox',
     'nose',
+    'mock',
     'coverage',
     'testfixtures',
-    ]
+    ] + install_requires
 
 
 class Tox(TestCommand):

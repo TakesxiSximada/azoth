@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-try:
-    import configparser
-except ImportError:
+import sys
+import six
+
+if six.PY2:
     import ConfigParser as configparser
+elif six.PY3:
+    import configparser
 
 
 def config2dict(conf_or_dict, name=None):
@@ -15,6 +18,14 @@ def config2dict(conf_or_dict, name=None):
 
 
 class AzothConfigParser(configparser.SafeConfigParser):
+    """ The configuration file parser for Azoth.
+    """
+
     def get_section_dict(self, section_name):
-        options = self.options(section_name)
-        return dict((key, self.get(section_name, key)) for key in options)
+        """ The dictionary creator.
+        """
+        if sys.version_info[0] == 2:
+            options = self.options(section_name)
+            return dict((key, self.get(section_name, key)) for key in options)
+        else:  # only python3
+            return self[section_name]

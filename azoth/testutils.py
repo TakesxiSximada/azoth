@@ -18,9 +18,10 @@ def create_db(func):
 def destroy_db(func):
     @functools.wraps(func)
     def _wrap(self, *args, **kwds):
+        rc = func(self, *args, **kwds)
         db_fixture = DBFixture()
         db_fixture.destroy_db()
-        return func(self, *args, **kwds)
+        return rc
     return _wrap
 
 
