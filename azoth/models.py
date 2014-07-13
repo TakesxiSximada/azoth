@@ -21,6 +21,7 @@ from .sessions import (
     DEFAULT_TARGET,
     SessionManager,
     )
+AUTO_INCREMENT = {'sqlite_autoincrement': True}
 Base = declarative_base()
 
 

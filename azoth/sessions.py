@@ -16,7 +16,7 @@ from .config import (
     )
 from .decorators import singleton
 
-DEFAULT_TARGET = 'master'
+DEFAULT_TARGET = 'default'
 
 
 class SessionSetup(object):
