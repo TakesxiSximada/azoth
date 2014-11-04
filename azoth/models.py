@@ -66,11 +66,11 @@ class CopyBase(object):
         'id',
         ]
 
-    def copy(self, deep=False, ignores=set(), *args,  **kwds):
+    def copy(self, deep=False, ignores=set(), *args, **kwds):
         cls = type(self)
         manager = manager_of_class(cls)
         if not manager:
-            raise TypeError('No mapper: {}'.format(cls))
+            raise TypeError('This mapper is Unkown: {}'.format(cls))
 
         def _get_ignore_attributes():
             for super_cls in cls.__mro__:
@@ -78,15 +78,14 @@ class CopyBase(object):
             yield ignores  # argument
 
         # select ignore properties
-        ignore_attributes = set()
-        for _ignores in _get_ignore_attributes():
-            ignore_attributes.update(_ignores)
+        ignore_attrs = set(
+            _ignores for _ignores in _get_ignore_attributes())
 
         # select properties
         columns = {}
         relationships = {}
         for attr in manager.mapper.iterate_properties:
-            if attr.key not in ignore_attributes:
+            if attr.key not in ignore_attrs:
                 if isinstance(attr, ColumnProperty):
                     columns[attr.key] = attr
                 elif isinstance(attr, RelationshipProperty):
@@ -102,7 +101,7 @@ class CopyBase(object):
 
         # deep copy
         if deep:
-            for key in attr in relationships.items():
+            for key, attr in relationships.items():
                 value = getattr(self, key)
                 setattr(new_obj, key, value)
                 if attr.uselist:
@@ -170,7 +169,7 @@ class LogicalDeleteBase(object):
         return deferred(
             sa.Column(
                 sa.TIMESTAMP, nullable=True, index=True,
-            ))
+                ))
 
 
 class SmartBase(
@@ -179,6 +178,7 @@ class SmartBase(
         TimestampBase,
         ):
     pass
+
 
 class PowerBase(
         SmartBase,
