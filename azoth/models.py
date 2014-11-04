@@ -159,6 +159,12 @@ class LogicalDeleteBase(object):
         'deleted_at',
         ]
 
+    def delete(self, as_save=True):
+        self.deleted_at = datetime.datetime.now()
+        if as_save:
+            self.save()
+        return self
+
     @declared_attr
     def deleted_at(self):
         return deferred(
@@ -167,10 +173,15 @@ class LogicalDeleteBase(object):
             ))
 
 
-class PowerBase(
+class SmartBase(
         ActionBase,
         CopyBase,
         TimestampBase,
+        ):
+    pass
+
+class PowerBase(
+        SmartBase,
         LogicalDeleteBase,
         ):
     pass
