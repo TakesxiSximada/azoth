@@ -95,7 +95,8 @@ class SessionPool(object):
         elif name in self._sessiongroups:
             return choice(self._sessiongroups[name])
         else:
-            raise ValueError('Session not found: {} not in {} and {}'.format(name, self._sessions.keys(), self._aliases.keys()))
+            raise ValueError('Session not found: {} not in {} and {}'.format(
+                name, self._sessions.keys(), self._aliases.keys()))
 
 
 @singleton

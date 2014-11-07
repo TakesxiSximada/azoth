@@ -42,10 +42,10 @@ class ActionBase(object):
 
     def update_timestamp(self):
         now = datetime.datetime.now()
-        if hasattr(self, 'created_at') and not self.created_at:
-            self.created_at = now
-        if hasattr(self, 'updated_at'):
-            self.updated_at = now
+        if hasattr(self, 'is_created') and not self.is_created:
+            self.is_created = now
+        if hasattr(self, 'is_updated'):
+            self.is_updated = now
 
     def save(self, target=DEFAULT_TARGET):
         self.update_timestamp()
@@ -66,53 +66,53 @@ class CopyBase(object):
         'id',
         ]
 
-    def copy(self, deep=False, ignores=set(), *args, **kwds):
+    @classmethod
+    def _get_ignore_attributes(cls, ignores=[], *args, **kwds):
+        for super_cls in cls.__mro__:
+            for attr in getattr(super_cls, '__copy_ignores__', []):
+                yield attr
+        for attr in ignores:
+            yield attr
+
+    def _get_attribute_datas(self, manager, ignores=[]):
+        type_properties = {
+            ColumnProperty: {},
+            RelationshipProperty: {},
+            }
+
+        for attr in manager.mapper.iterate_properties:
+            if attr.key not in ignores:
+                for typ, prop in type_properties.items():
+                    if isinstance(attr, typ):
+                        prop[attr.key] = attr
+        return type_properties
+
+    def merge(self, other, ignores=[], deep=False):
         cls = type(self)
         manager = manager_of_class(cls)
         if not manager:
             raise TypeError('This mapper is Unkown: {}'.format(cls))
+        ignores = [attr for attr in self._get_ignore_attributes(ignores)]
+        type_attributes = self._get_attribute_datas(manager, ignores)
+        for key, attr in type_attributes[ColumnProperty].items():
+            setattr(other, key, getattr(self, key))
 
-        def _get_ignore_attributes():
-            for super_cls in cls.__mro__:
-                yield getattr(super_cls, '__copy_ignores__', [])
-            yield ignores  # argument
-
-        # select ignore properties
-        ignore_attrs = set(
-            _ignores for _ignores in _get_ignore_attributes())
-
-        # select properties
-        columns = {}
-        relationships = {}
-        for attr in manager.mapper.iterate_properties:
-            if attr.key not in ignore_attrs:
-                if isinstance(attr, ColumnProperty):
-                    columns[attr.key] = attr
-                elif isinstance(attr, RelationshipProperty):
-                    relationships[attr.key] = attr
-                else:
-                    pass  # ignore
-
-        # copy
-        new_obj = type(self)()
-        for key in attr in columns.items():
-            value = getattr(self, key)
-            setattr(new_obj, key, value)
-
-        # deep copy
+        # deep copy, coping relationships.
         if deep:
-            for key, attr in relationships.items():
-                value = getattr(self, key)
-                setattr(new_obj, key, value)
+            for key, attr in type_attributes[RelationshipProperty].items():
+                setattr(other, key, getattr(self, key))
                 if attr.uselist:
                     objs = [obj for obj in getattr(self, key)
-                            if hasattr(obj, 'clone')
+                            if hasattr(obj, 'copy')
                             ]
-                    setattr(new_obj, key, objs)
+                    setattr(other, key, objs)
                 else:
-                    obj = getattr(self, 'key')
-                    setattr(self, key, obj)
-        return new_obj
+                    setattr(other, key, getattr(self, key))
+        return other
+
+    def copy(self, *args, **kwds):
+        new_obj = type(self)()
+        return self.merge(new_obj, *args, **kwds)
 
 
 class IndexBase(object):
@@ -130,12 +130,12 @@ class IndexBase(object):
 
 class TimestampBase(object):
     __copy_ignores__ = [
-        'created_at',
-        'updated_at',
+        'is_created',
+        'is_updated',
         ]
 
     @declared_attr
-    def created_at(self):
+    def is_created(self):
         return deferred(
             sa.Column(
                 sa.TIMESTAMP, nullable=False, default=datetime.datetime.now,
@@ -143,7 +143,7 @@ class TimestampBase(object):
                 ))
 
     @declared_attr
-    def updated_at(self):
+    def is_updated(self):
         return deferred(
             sa.Column(
                 sa.TIMESTAMP, nullable=False, default=datetime.datetime.now,
@@ -155,17 +155,17 @@ class TimestampBase(object):
 
 class LogicalDeleteBase(object):
     __copy_ignores__ = [
-        'deleted_at',
+        'is_deleted',
         ]
 
     def delete(self, as_save=True):
-        self.deleted_at = datetime.datetime.now()
+        self.is_deleted = datetime.datetime.now()
         if as_save:
             self.save()
         return self
 
     @declared_attr
-    def deleted_at(self):
+    def is_deleted(self):
         return deferred(
             sa.Column(
                 sa.TIMESTAMP, nullable=True, index=True,
