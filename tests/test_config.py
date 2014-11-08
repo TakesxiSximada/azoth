@@ -2,6 +2,7 @@
 
 from unittest import TestCase
 
+
 def open_dummy_config(conf_class=None):
     try:
         import io
