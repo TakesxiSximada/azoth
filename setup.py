@@ -56,7 +56,7 @@ DESCRIPTION = 'Sqlalchemy utilities'
 
 setup(
     name='azoth',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/TakesxiSximada/azoth',
     download_url='https://github.com/TakesxiSximada/azoth',
     license='BSD',
