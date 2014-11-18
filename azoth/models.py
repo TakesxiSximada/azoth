@@ -23,6 +23,7 @@ from .sessions import (
     )
 AUTO_INCREMENT = {'sqlite_autoincrement': True}
 Base = declarative_base()
+NO_DELETE = None
 
 
 def create_all(*args, **kwds):
@@ -38,7 +39,10 @@ class ActionBase(object):
     @classmethod
     def query(cls, target=DEFAULT_TARGET):
         session = cls._manager.get(target)
-        return session.query(cls)
+        qs = session.query(cls)
+        if hasattr(cls, 'is_deleted'):
+            qs = qs.filter(cls.is_deleted == NO_DELETE)
+        return qs
 
     def update_timestamp(self):
         now = datetime.datetime.now()
