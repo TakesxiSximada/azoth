@@ -66,14 +66,14 @@ class ActionBase(object):
 
 
 class CopyBase(object):
-    __copy_ignores__ = [
+    _copy_ignores_ = [
         'id',
         ]
 
     @classmethod
     def _get_ignore_attributes(cls, ignores=[], *args, **kwds):
         for super_cls in cls.__mro__:
-            for attr in getattr(super_cls, '__copy_ignores__', []):
+            for attr in getattr(super_cls, '_copy_ignores_', []):
                 yield attr
         for attr in ignores:
             yield attr
@@ -120,7 +120,7 @@ class CopyBase(object):
 
 
 class IndexBase(object):
-    __copy_ignores__ = [
+    _copy_ignores_ = [
         'index',
         ]
 
@@ -133,7 +133,7 @@ class IndexBase(object):
 
 
 class TimestampBase(object):
-    __copy_ignores__ = [
+    _copy_ignores_ = [
         'is_created',
         'is_updated',
         ]
@@ -158,7 +158,7 @@ class TimestampBase(object):
 
 
 class LogicalDeleteBase(object):
-    __copy_ignores__ = [
+    _copy_ignores_ = [
         'is_deleted',
         ]
 
