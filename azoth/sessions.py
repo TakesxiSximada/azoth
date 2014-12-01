@@ -52,10 +52,12 @@ class SessionPool(object):
         self._aliases[dst] = src
 
     def install(self, name, conf, prefix='sqlalchemy.'):
-        self.can_use_name(name)
         options = config2dict(conf, name)
-
         engine = sa.engine_from_config(options, prefix)
+        self._install(name, engine)
+
+    def _install(self, name, engine):
+        self.can_use_name(name)
         extension = ZopeTransactionExtension()
         session = sa_orm.sessionmaker(extension=extension)
         DBSession = sa_orm.scoped_session(session)
