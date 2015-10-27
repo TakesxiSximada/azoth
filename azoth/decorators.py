@@ -7,7 +7,7 @@ def singleton(cls):
     _instances = {}
 
     def _wrap(*args, **kwds):
-        nonlocal _instances
+        # nonlocal _instances  # cannot use onlocal on python2
         if cls not in _instances:
             _instances[cls] = cls(*args, **kwds)
         return _instances[cls]
